@@ -1,0 +1,27 @@
+version 0.3 of AI4Mars merged dataset.
+
+* MER data fixes.
+  + added missing images
+  + removed training labels which overlap with test labels
+  + added merged training labels
+    + merges that resulted in empty labels removed
+    - merges currently unmasked (range mask not applied)
+
+---------------------------------------
+version 0.2  of AI4Mars merged dataset.
+
+* MER data added.
+  + includes image products
+  - 30 meter range and rover mask products not yet provided
+  - includes some bad/useless images
+  + includes unmasked+merged labels 
+  + includes raw (unmasked, not merged, some bad labels) labels
+  - masked+merged+cleaned labels not yet provided
+
+---------------------------------------
+version 0.1 of AI4Mars merged dataset.
+
+* Contains Curiosity (MSL) data
+  + includes 30 meter range, rover mask, and image products
+  + includes masked+merged+cleaned (bad labels removed) labels
+* WIP - MER data has not yet been processed/packaged
