@@ -25,6 +25,10 @@ def mer_extract_sol(filename):
     sol: the sol that corresponds to the provided filename
     """
     sclk = filename[4:13]
-    sol = math.floor((float(sclk)-128141132.)/88775.42064)
+    if filename[0]=='1':
+        sol = math.floor((float(sclk)-128141132.)/88775.42064)
+    else:
+        sol = math.floor((float(sclk)-126322960.)/88775.42064) 
+    
     return sol
 
