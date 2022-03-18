@@ -109,7 +109,7 @@ def download_file_from_url(url, output_path, filename):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     if not os.path.exists(output_path+filename):
-        file = wget.download(url, out = output_path)
+        file = wget.download(url, out = output_path, bar=None)
         img = PDS3Image.open(file)
         img_arr = img.data
         img_arr = img_arr.reshape(img_arr.shape[1:])
