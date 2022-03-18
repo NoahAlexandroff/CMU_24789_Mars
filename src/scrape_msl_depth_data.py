@@ -121,3 +121,27 @@ def download_file_from_url(url, output_path, filename):
         return 1
 
     return 0
+
+def main(data_path, output_path):
+    """
+    Main function that downloads the desired file types that map to the existing
+    edr files in the AI4Mars dataset. The default values are for range data. 
+
+    Parameters:
+    -----------
+    data_path: the path to the data directory in the AI4Mars dataset
+
+    output_path: the path of the directory the newly downloaded data should be stored
+
+    Returns:
+    --------
+    num_files_downloaded: the number of files that were downloaded
+    """
+    num_files_downloaded = 0
+    raw_filenames = os.listdir(data_path+'/msl/images/edr')
+    for filename in raw_filenames:
+        depth_filename = update_filename_from_edr(filename, prodid = "RNG", extension = ".tiff")
+        depth_url = msl_create_url(filename) 
+        num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename)
+    
+    return num_files_downloaded
