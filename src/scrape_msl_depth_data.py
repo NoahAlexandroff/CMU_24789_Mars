@@ -61,3 +61,28 @@ def msl_create_url(filename, prodid = "RNG", extension='.IMG'):
     combined_url = base_url + data_url + sol_url + file_url
     
     return combined_url
+
+def update_filename_from_edr(edr_filename, prodid, extension):
+    """
+    Generates an updated filename from an edr filename for msl files from the PDS.
+
+    Parameters:
+    -----------
+    edr_filename: the name of the MSL EDR file contained in AI4Mars dataset
+
+    prodid: the prodid of the desired url. this determines which type of data will be  
+    downloaded. more information about available prodids is available at
+    https://pds-imaging.jpl.nasa.gov/data/msl/MSLNAV_1XXX/DOCUMENT/MSL_CAMERA_SIS.PDF
+
+
+    extension: the extension to be used for the desired url
+
+
+    Returns:
+    --------
+    updated_filename : the updated filename that incorporates the desired prodid and
+    extension
+    """
+    updated_filename = edr_filename[0:13] + prodid + edr_filename[16:-4] + extension
+
+    return updated_filename
