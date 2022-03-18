@@ -145,3 +145,16 @@ def main(data_path, output_path):
         num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename)
     
     return num_files_downloaded
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data-path', help='The path to the data folder in the AI4Mars dataset',
+                        default="./data/")
+    parser.add_argument('--output-path', help='The path to the directory the msl depth data should be downloaded to.',
+                        default=None)
+    args = parser.parse_args()
+    if args.output_path == None:
+        args.output_path = args.data_path + 'msl/images/rng/'
+    output = main(args.data_path, args.output_path)
+    print('\n')
+    print(f"Downloaded {output} files.")
