@@ -131,3 +131,45 @@ def download_file_from_url(url, output_path, filename):
             logging.info(" Missing URL: " + url)
 
     return 0
+
+def main(data_path, output_path, starting_index, ending_index):
+    """
+    Main function that downloads the desired file types that map to the existing
+    eff files in the AI4Mars dataset. The default values are for range data. 
+
+    Parameters:
+    -----------
+    data_path: the path to the data directory in the AI4Mars dataset
+
+    output_path: the path of the directory the newly downloaded data should be stored
+
+    Returns:
+    --------
+    num_files_downloaded: the number of files that were downloaded
+    """
+    num_files_downloaded = 0
+    raw_filenames = os.listdir(data_path+'/mer/images/eff')[starting_index:ending_index]
+    for filename in raw_filenames:
+        depth_filename = update_filename_from_edr(filename, prodid = "rnl", extension = ".tiff")
+        depth_url = msl_create_url(filename) 
+        num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename)
+    
+    return num_files_downloaded
+
+if __name__=='__main__':
+    logging.basicConfig(filename="mer_scrape.log", level=logging.DEBUG)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data-path', help='The path to the data folder in the AI4Mars dataset',
+                        default="./data/")
+    parser.add_argument('--output-path', help='The path to the directory the msl depth data should be downloaded to.',
+                        default=None)
+    parser.add_argument('--starting-index', help='The starting index of files to allow for distributed download.',
+                        default=0)
+    parser.add_argument('--ending-index', help='The ending index of files to allow for distributed download.',
+                        default=-1)
+    args = parser.parse_args()
+    if args.output_path == None:
+        args.output_path = args.data_path + 'mer/images/rnl/'
+    output = main(args.data_path, args.output_path, int(args.starting_index), int(args.ending_index))
+    print('\n')
+    print(f"Downloaded {output} files.")
