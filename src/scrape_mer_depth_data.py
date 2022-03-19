@@ -92,3 +92,42 @@ def update_filename_from_eff(eff_filename, prodid, extension):
     updated_filename = edr_filename[0:11] + prodid + edr_filename[14:-4] + extension
 
     return updated_filename
+
+
+def download_file_from_url(url, output_path, filename):
+    """
+    Downloads the desired file from PDS and saves it in the desired location and
+    format
+
+    Parameters:
+    -----------
+    url: the url that will be used to download data from PDS
+
+    output_path: the location that the downloaded file should be saved at
+
+    filename: the name and format the downloaded file should be saved as
+
+
+    Returns:
+    --------
+    1 or 0 : returns 1 if a file is downloaded or 0 if the file is already 
+    present in output path
+    """
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    if not os.path.exists(output_path+filename):
+        try:
+            file = wget.download(url, out = output_path, bar=None)
+            img = PDS3Image.open(file)
+            img_arr = img.data
+            img_arr = img_arr.reshape(img_arr.shape[1:])
+            img_arr = img_arr.astype(np.float32)
+            pil_img = Image.fromarray(img_arr, mode='F')
+            pil_img.save(output_path+filename)
+            os.remove(output_path+filename[:-4]+'IMG')
+
+            return 1
+        except:
+            logging.info(" Missing URL: " + url)
+
+    return 0
