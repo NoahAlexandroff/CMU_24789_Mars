@@ -66,3 +66,29 @@ def mer_create_url(filename, prodid = "rnl", extension='.img'):
     combined_url = base_url + data_url + sol_url + file_url
     
     return combined_url
+
+
+def update_filename_from_eff(eff_filename, prodid, extension):
+    """
+    Generates an updated filename from an eff filename for mer files from the PDS.
+
+    Parameters:
+    -----------
+    eff_filename: the name of the MSL eff file contained in AI4Mars dataset
+
+    prodid: the prodid of the desired url. this determines which type of data will be  
+    downloaded. more information about available prodids is available at
+    https://pds-imaging.jpl.nasa.gov/data/mer/spirit/mer2no_0xxx/document/CAMSIS_V4-4_7-31-14.PDF or
+    https://pds-imaging.jpl.nasa.gov/data/mer/opportunity/mer1no_0xxx/document/CAMSIS_V4-4_7-31-14.PDF
+    depending upon the desired rover
+
+    extension: the extension to be used for the desired url
+
+    Returns:
+    --------
+    updated_filename : the updated filename that incorporates the desired prodid and
+    extension
+    """
+    updated_filename = edr_filename[0:11] + prodid + edr_filename[14:-4] + extension
+
+    return updated_filename
