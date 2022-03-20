@@ -1,6 +1,7 @@
 import os
 import math
 import io
+import logging
 
 import numpy as np
 import wget
@@ -24,7 +25,7 @@ def mer_extract_sol(filename):
     --------
     sol: the sol that corresponds to the provided filename
     """
-    sclk = filename[4:13]
+    sclk = filename[2:11]
     if filename[0]=='1':
         sol = math.floor((float(sclk)-128141132.)/88775.42064)
     else:
@@ -55,14 +56,14 @@ def mer_create_url(filename, prodid = "rnl", extension='.img'):
     combined_url : the generated url that can be used to download files from the PDS
     """
 
-    sol = msl_extract_sol(filename)
+    sol = mer_extract_sol(filename)
     base_url = "https://pds-imaging.jpl.nasa.gov/data/mer/"
     if filename[0]=='1':
         data_url = "opportunity/mer1no_0xxx/data/"
     else: 
         data_url = "spirit/mer2no_0xxx/data/"
-    sol_url = "sol" + f'{sol:05d}'+"/rdr/"
-    file_url = update_filename_from_edr(filename, prodid = prodid, extension=extension)
+    sol_url = "sol" + f'{sol:04d}'+"/rdr/"
+    file_url = update_filename_from_eff(filename, prodid = prodid, extension=extension)
     combined_url = base_url + data_url + sol_url + file_url
     
     return combined_url
@@ -89,7 +90,7 @@ def update_filename_from_eff(eff_filename, prodid, extension):
     updated_filename : the updated filename that incorporates the desired prodid and
     extension
     """
-    updated_filename = edr_filename[0:11] + prodid + edr_filename[14:-4] + extension
+    updated_filename = eff_filename[0:11] + prodid + eff_filename[14:-4] + extension
 
     return updated_filename
 
@@ -150,14 +151,14 @@ def main(data_path, output_path, starting_index, ending_index):
     num_files_downloaded = 0
     raw_filenames = os.listdir(data_path+'/mer/images/eff')[starting_index:ending_index]
     for filename in raw_filenames:
-        depth_filename = update_filename_from_edr(filename, prodid = "rnl", extension = ".tiff")
-        depth_url = msl_create_url(filename) 
+        depth_filename = update_filename_from_eff(filename, prodid = "rnl", extension = ".tiff")
+        depth_url = mer_create_url(filename) 
         num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename)
     
     return num_files_downloaded
 
 if __name__=='__main__':
-    logging.basicConfig(filename="mer_scrape.log", level=logging.DEBUG)
+    logging.basicConfig(filename="mer_scrape.log", level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-path', help='The path to the data folder in the AI4Mars dataset',
                         default="./data/")
