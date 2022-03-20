@@ -151,7 +151,7 @@ def main(data_path, output_path, starting_index, ending_index):
     return num_files_downloaded
 
 if __name__=='__main__':
-    logging.basicConfig(filename="msl_scrape.log", level=logging.DEBUG)
+    logging.basicConfig(filename="msl_scrape.log", level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-path', help='The path to the data folder in the AI4Mars dataset',
                         default="./data/")
