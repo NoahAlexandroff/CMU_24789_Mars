@@ -2,17 +2,13 @@ import os
 import math
 import io
 import logging
+import argparse
 
-import numpy as np
 import wget
-
 import numpy as np
 from PIL import Image
 from planetaryimage import PDS3Image
   
-import argparse
-
-
 def msl_extract_sol(filename):
     """
     Extracts the sol from the filename for msl data

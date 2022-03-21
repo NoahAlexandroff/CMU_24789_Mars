@@ -1,17 +1,11 @@
 name: mars_project
 channels:
   - default
-  - pytorch
 dependencies:
   - python=3.7.*
   - numpy
-  - pandas
-  - matplotlib
-  - pytorch 
-  - torchvision 
-  - torchaudio
-  - jupyter
-  - notebook
+  - pillow
   - pip
   - pip:
     - planetaryimage
+    - wget
