@@ -1,8 +1,8 @@
 #!/bin/zsh
 
-start=1000
-end=1500
-skip=50
+start=0
+end=16500
+skip=500
 
 for start_ind in {$start..$(($end-$skip))..$skip}
     do
