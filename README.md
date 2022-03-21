@@ -41,4 +41,4 @@ desired files faster.
 The same process can be used to download depth data for the MER (Spirit and Opportunity) labeled data,
 but wih the scripts that have "mer" substituted for "msl".
 
-Alternatively, you may download the depth data from (NOT YET HOSTED).
+Alternatively, you may download the depth data from [MSL](https://drive.google.com/drive/folders/138KDuqOHcYZUWs0cA14fSSpyohjsM5_S?usp=sharing) and [MER](https://drive.google.com/drive/folders/1ybI8Wid3mHunNyBFf6BKdyI4Plj9pu8H?usp=sharing).
