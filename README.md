@@ -44,4 +44,4 @@ but wih the scripts that have "mer" substituted for "msl".
 Alternatively, you may download the depth data from [MSL](https://drive.google.com/drive/folders/138KDuqOHcYZUWs0cA14fSSpyohjsM5_S?usp=sharing) and [MER](https://drive.google.com/drive/folders/1ybI8Wid3mHunNyBFf6BKdyI4Plj9pu8H?usp=sharing).
 
 It is worthwhile to note that there were some missing range files from the [Platary Data System (PDS)](https://pds-imaging.jpl.nasa.gov/data/) that were present in the AI4Mars dataset. The list of files that were not available for download can 
-be accessed from [MSL Missing Depth Files](https://github.com/NoahAlexandroff/CMU_24789_Mars/tree/main/data/msl/images/rng)[MER Missing Depth Files](https://github.com/NoahAlexandroff/CMU_24789_Mars/tree/main/data/mer/images/rnl).
+be accessed from [MSL Missing Depth Files](https://github.com/NoahAlexandroff/CMU_24789_Mars/tree/main/data/msl/images/rng) and [MER Missing Depth Files](https://github.com/NoahAlexandroff/CMU_24789_Mars/tree/main/data/mer/images/rnl).
