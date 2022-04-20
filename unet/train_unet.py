@@ -13,7 +13,7 @@ from unet import UNet
 import pickle
 
 
-def main(num_epochs=5, batch_size=32, dataroot="./data/msl/", image_size = 1024//8):
+def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == torch.device('cpu'):
         num_workers = 0
@@ -38,10 +38,7 @@ def main(num_epochs=5, batch_size=32, dataroot="./data/msl/", image_size = 1024/
                                              shuffle=False, num_workers=num_workers)
 
 
-    # classes = ('plane', 'car', 'bird', 'cat',
-    #            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-    # # TODO: Define your optimizer and criterion.
     model = UNet(in_channels=1, n_classes=5)
     record = [[], [], []]
 
@@ -58,7 +55,7 @@ def main(num_epochs=5, batch_size=32, dataroot="./data/msl/", image_size = 1024/
         train_correct, test_correct = 0, 0
         model.train()
         
-        for i, data in enumerate(trainloader, 0):
+        for data in trainloader:
             # get the inputs; data is a list of [inputs, labels]
             images, depths, labels = data
             images=images.reshape(batch_size,1,image_size,image_size)
@@ -68,28 +65,36 @@ def main(num_epochs=5, batch_size=32, dataroot="./data/msl/", image_size = 1024/
             optimizer.zero_grad()
 
             # forward + backward + optimize
+            
             outputs = model(images.to(device))
-            outputs.permute(0, 2, 3, 1)
-            outputs = outputs.reshape(batch_size*image_size*image_size, 5)
-            labels = labels.reshape(batch_size*image_size*image_size).long()
+            
+            # outputs = outputs.reshape(batch_size,5,image_size,image_size)
+            labels = labels.reshape(batch_size,image_size,image_size).long()
             labels[labels==255]=4
+            print(outputs.shape)
+            print(labels.shape)
             
             loss = criterion(outputs, labels.to(device))
+            print('loss_in')
             loss.backward()
+            print('loss_out')
             optimizer.step()
 
             # print statistics
             running_loss += loss.item()
-            
+            seg_acc = (labels.cpu() == torch.argmax(outputs, axis=1).cpu()).sum() / torch.numel(labels.cpu()).item()
+            print(seg_acc)
             _, train_predict = torch.max(outputs.data, 1)
             train_total += labels.size(0)
             train_correct += (train_predict == labels.to(device)).sum().item()
-            print(i, loss.item())
+            print(loss.item())
     
         with torch.no_grad():
             model.eval()
             for data in testloader:
-                images, labels = data
+                images, depths, labels = data
+                images=images.reshape(batch_size,1,image_size,image_size)
+                depths=depths.reshape(batch_size,1,image_size,image_size)
                 outputs = model(images.to(device))
                 _, test_predict = torch.max(outputs.data, 1)
                 test_total += labels.size(0)
