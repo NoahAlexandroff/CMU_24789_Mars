@@ -1,10 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.functional as F
-import torchvision
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 import numpy as np
 from ai4mars_dataset import AI4MarsDataset
@@ -67,7 +63,6 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
             
             outputs = model(images.to(device))
             
-            # outputs = outputs.reshape(batch_size,5,image_size,image_size)
             labels = labels.reshape(batch_size,image_size,image_size).long()
             labels[labels==255]=4
             print(outputs.shape)
@@ -81,12 +76,12 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
 
             # print statistics
             running_loss += loss.item()
-            seg_acc = (labels.cpu() == torch.argmax(outputs, axis=1).cpu()).sum() / torch.numel(labels.cpu()).item()
-            print(seg_acc)
+            seg_acc = ((labels.cpu() == torch.argmax(outputs, axis=1).cpu()).sum() / torch.numel(labels.cpu())).item()
+            print('batch_acc:',seg_acc)
             _, train_predict = torch.max(outputs.data, 1)
             train_total += labels.size(0)
             train_correct += (train_predict == labels.to(device)).sum().item()
-            print(loss.item())
+            print('loss:',loss.item())
     
         with torch.no_grad():
             model.eval()
