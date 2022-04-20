@@ -34,7 +34,7 @@ class AI4MarsDataset(data.Dataset):
                 base_name = os.path.basename(label_path)[:-4]
             else:
                 base_name = os.path.basename(label_path)[:-11]
-            depth_path = os.path.join(folder_path,'images','rng',base_name[0:13]+'RNG'+base_name[16:]+".tiff")
+            depth_path = os.path.join(folder_path,'images','rng_256',base_name[0:13]+'RNG'+base_name[16:]+".tiff")
             if os.path.exists(depth_path):
                 self.img_files.append(os.path.join(folder_path,'images','edr',base_name+".JPG"))
                 self.depth_files.append(depth_path)
@@ -47,7 +47,14 @@ class AI4MarsDataset(data.Dataset):
         image = np.asarray(Image.open(img_path), dtype=np.float32)
         depth = np.asarray(Image.open(depth_path), dtype=np.float32)
         label = np.asarray(Image.open(label_path), dtype=np.int32)
-        return torch.from_numpy(image).float(), torch.from_numpy(depth).float(), torch.from_numpy(label).float()
+        image.resize((256,256,Image.ANTIALIAS))
+        depth.resize((256,256,Image.ANTIALIAS))
+        label.resize((256,256,Image.ANTIALIAS))
+        image = torch.from_numpy(image).float()
+        depth = torch.from_numpy(depth).float()
+        label = torch.from_numpy(label).long()
+        
+        return image, depth, label
 
     def __len__(self):
         return len(self.img_files)
