@@ -35,8 +35,9 @@ class AI4MarsDataset(data.Dataset):
             else:
                 base_name = os.path.basename(label_path)[:-11]
             depth_path = os.path.join(folder_path,'images','rng_256',base_name[0:13]+'RNG'+base_name[16:]+".tiff")
-            if os.path.exists(depth_path):
-                self.img_files.append(os.path.join(folder_path,'images','edr',base_name+".JPG"))
+            image_path = os.path.join(folder_path,'images','edr',base_name+".JPG")
+            if os.path.exists(depth_path) and os.path.exists(image_path):
+                self.img_files.append(image_path)
                 self.depth_files.append(depth_path)
                 self.label_files.append(label_path)
 
