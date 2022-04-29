@@ -8,7 +8,7 @@ from unet import UNet
 import pickle
 
 
-def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
+def main(num_epochs=5, batch_size=16, dataroot="./data_subset/msl/", image_size = 256):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == torch.device('cpu'):
         num_workers = 0
@@ -17,13 +17,12 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
         num_workers = 4
     # load and transform dataset
 
-    train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True)
-    test_dataset = AI4MarsDataset(folder_path=dataroot, is_train=False)
+    train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True, image_size=image_size)
+    test_dataset = AI4MarsDataset(folder_path=dataroot, is_train=False, image_size=image_size)
 
-    train_size = int(0.8 * len(train_dataset))
+    train_size = int(256/256 * len(train_dataset))
     eval_size = len(train_dataset) - train_size
     train_dataset, eval_dataset = torch.utils.data.random_split(train_dataset, [train_size, eval_size])
-    
     
     trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size,
                                               shuffle=True, num_workers=num_workers)
@@ -31,8 +30,6 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
                                               shuffle=False, num_workers=num_workers)
     testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
                                              shuffle=False, num_workers=num_workers)
-
-
 
     model = UNet(in_channels=1, n_classes=5)
     record = [[], [], []]
@@ -53,9 +50,11 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
         for data in trainloader:
             # get the inputs; data is a list of [inputs, labels]
             images, depths, labels = data
-            images=images.reshape(batch_size,1,image_size,image_size)
-            depths=depths.reshape(batch_size,1,image_size,image_size)
-
+            num_in_batch = images.shape[0]
+            images=images.reshape(num_in_batch,1,image_size,image_size)
+            depths=depths.reshape(num_in_batch,1,image_size,image_size)
+            labels = labels.reshape(num_in_batch,image_size,image_size).long()
+            labels[labels>=255]=4
             # zero the parameter gradients
             optimizer.zero_grad()
 
@@ -63,15 +62,8 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
             
             outputs = model(images.to(device))
             
-            labels = labels.reshape(batch_size,image_size,image_size).long()
-            labels[labels==255]=4
-            print(outputs.shape)
-            print(labels.shape)
-            
             loss = criterion(outputs, labels.to(device))
-            print('loss_in')
             loss.backward()
-            print('loss_out')
             optimizer.step()
 
             # print statistics
@@ -82,18 +74,19 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
             train_total += labels.size(0)
             train_correct += (train_predict == labels.to(device)).sum().item()
             print('loss:',loss.item())
-    
         with torch.no_grad():
             model.eval()
             for data in testloader:
                 images, depths, labels = data
-                images=images.reshape(batch_size,1,image_size,image_size)
-                depths=depths.reshape(batch_size,1,image_size,image_size)
+                num_in_batch = images.shape[0]
+                images=images.reshape(num_in_batch,1,image_size,image_size)
+                depths=depths.reshape(num_in_batch,1,image_size,image_size)
+                labels = labels.reshape(num_in_batch,image_size,image_size).long()
+                labels[labels==255]=4
                 outputs = model(images.to(device))
                 _, test_predict = torch.max(outputs.data, 1)
                 test_total += labels.size(0)
                 test_correct += (test_predict == labels.to(device)).sum().item()
-        
         train_acc = train_correct/train_total
         test_acc = test_correct/test_total
         record[0].append(train_acc)
@@ -104,7 +97,7 @@ def main(num_epochs=5, batch_size=4, dataroot="./data/msl/", image_size = 256):
         if test_acc>best_model_test_acc:
             best_model_test_acc=test_acc
             
-            torch.save(model.state_dict(), PATH)
+            torch.save(model.state_dict(), './model.pth')
             with open("./record.pkl", "wb") as fp:   # Unpickling
                 pickle.dump(record, fp)
 
