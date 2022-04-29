@@ -14,7 +14,7 @@ def main(num_epochs=5, batch_size=16, dataroot="./data_subset/msl/", image_size 
         num_workers = 0
     else:
         torch.cuda.empty_cache()
-        num_workers = 4
+        num_workers = 2
     # load and transform dataset
 
     train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True, image_size=image_size)
