@@ -19,8 +19,9 @@ class AI4MarsDataset(data.Dataset):
     is_train: True/False whether the dataset should be for the training or testing data
     
     """
-    def __init__(self, folder_path, is_train):
+    def __init__(self, folder_path, is_train, image_size=256):
         super(AI4MarsDataset, self).__init__()
+        self.image_size = image_size
         self.img_files = []
         self.depth_files = []
         self.label_files = []
@@ -40,6 +41,7 @@ class AI4MarsDataset(data.Dataset):
                 self.label_files.append(label_path)
 
     def __getitem__(self, index):
+        image_size = self.image_size
         img_path = self.img_files[index]
         label_path = self.label_files[index]
         depth_path = self.depth_files[index]
@@ -59,6 +61,7 @@ class AI4MarsDataset(data.Dataset):
         return len(self.img_files)
 
     def display_image(self, index):
+        image_size = self.image_size
         img_path = self.img_files[index]
         depth_path = self.depth_files[index]
         image = np.ascontiguousarray(Image.open(img_path), dtype=np.float32).reshape(1024,1024,1)
