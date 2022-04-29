@@ -46,12 +46,15 @@ class AI4MarsDataset(data.Dataset):
         img_path = self.img_files[index]
         label_path = self.label_files[index]
         depth_path = self.depth_files[index]
-        image = np.asarray(Image.open(img_path), dtype=np.float32)
-        depth = np.asarray(Image.open(depth_path), dtype=np.float32)
-        label = np.asarray(Image.open(label_path), dtype=np.int32)
-        image.resize((256,256,Image.ANTIALIAS))
-        depth.resize((256,256,Image.ANTIALIAS))
-        label.resize((256,256,Image.ANTIALIAS))
+        image = Image.open(img_path)
+        depth = Image.open(depth_path)
+        label = Image.open(label_path)
+        image = image.resize((image_size,image_size),Image.ANTIALIAS)
+        depth = depth.resize((image_size,image_size),Image.ANTIALIAS)
+        label = label.resize((image_size,image_size),Image.NEAREST)
+        image = np.asarray(image)
+        depth = np.asarray(depth)
+        label = np.asarray(label)
         image = torch.from_numpy(image).float()
         depth = torch.from_numpy(depth).float()
         label = torch.from_numpy(label).long()
