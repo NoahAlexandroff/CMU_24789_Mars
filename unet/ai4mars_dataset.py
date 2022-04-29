@@ -68,8 +68,12 @@ class AI4MarsDataset(data.Dataset):
         image_size = self.image_size
         img_path = self.img_files[index]
         depth_path = self.depth_files[index]
-        image = np.ascontiguousarray(Image.open(img_path), dtype=np.float32).reshape(1024,1024,1)
-        depth = np.ascontiguousarray(Image.open(depth_path), dtype=np.float32).reshape(1024,1024,1)
+        image = Image.open(img_path)
+        depth = Image.open(depth_path)
+        image = image.resize((image_size,image_size),Image.ANTIALIAS)
+        depth = depth.resize((image_size,image_size),Image.ANTIALIAS)
+        image = np.ascontiguousarray(image, dtype=np.float32).reshape(image_size,image_size,1)
+        depth = np.ascontiguousarray(depth, dtype=np.float32).reshape(image_size,image_size,1)
         color_raw = o3d.geometry.Image(image)
         depth_raw = o3d.geometry.Image(depth)
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
