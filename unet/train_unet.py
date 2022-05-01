@@ -39,7 +39,8 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
                                              shuffle=False, num_workers=num_workers)
 
     model = UNet(in_channels=1, n_classes=5)
-    record = {"training_acc":[], "test_acc":[], "training_loss":[], "test_loss":[],
+    record = {"train_size":train_size,
+              "training_acc":[], "test_acc":[], "training_loss":[], "test_loss":[],
               "training_dice":[], "test_dice":[], "training_jaccard":[], "test_jaccard":[],
               "training_cm":[], "test_cm":[]}
 
