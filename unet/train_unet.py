@@ -108,8 +108,8 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
         record["test_dice"].append(test_dice/len(testloader))
         record["training_jaccard"].append(train_jaccard/len(trainloader))
         record["test_jaccard"].append(test_jaccard/len(testloader))
-        record["training_cm"].append(compute_confusion_matrix(train_cm))
-        record["test_cm"].append(compute_confusion_matrix(train_cm))
+        record["training_cm"].append(compute_confusion_matrix(train_cm).to("cpu"))
+        record["test_cm"].append(compute_confusion_matrix(train_cm).to("cpu"))
 
         with open("./record.pkl", "wb") as fp:   # Unpickling
             pickle.dump(record, fp)
