@@ -113,7 +113,7 @@ def download_file_from_url(url, output_path, filename, output_size):
             img_arr = img_arr.reshape(img_arr.shape[1:])
             img_arr = img_arr.astype(np.float32)
             pil_img = Image.fromarray(img_arr, mode='F')
-            pil_img=pil_img.resize((output_size,output_size),Image.ANTIALIAS)
+            pil_img=pil_img.resize((output_size,output_size),Image.NEAREST)
             pil_img.save(output_path+filename)
             os.remove(output_path+filename[:-4]+'IMG')
 
