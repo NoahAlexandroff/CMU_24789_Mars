@@ -38,7 +38,7 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
     testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
                                              shuffle=False, num_workers=num_workers)
 
-    model = UNet(in_channels=1, n_classes=5)
+    model = UNet(in_channels=2, n_classes=5)
     record = {"train_size":train_size,
               "training_acc":[], "test_acc":[], "training_loss":[], "test_loss":[],
               "training_dice":[], "test_dice":[], "training_jaccard":[], "test_jaccard":[],
@@ -64,6 +64,9 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
             num_in_batch = images.shape[0]
             images=images.reshape(num_in_batch,1,image_size,image_size)
             depths=depths.reshape(num_in_batch,1,image_size,image_size)
+
+            model_input = torch.cat((images, depths), dim=1)
+
             labels = labels.reshape(num_in_batch,image_size,image_size).long()
             labels[labels>=255]=4
             # zero the parameter gradients
@@ -71,7 +74,7 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
 
             # forward + backward + optimize
             
-            outputs = model(images.to(device))
+            outputs = model(model_input.to(device))
             loss = combined_loss(labels.to(device),outputs)
             loss.backward()
             optimizer.step()
@@ -90,9 +93,12 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256,
                 num_in_batch = images.shape[0]
                 images=images.reshape(num_in_batch,1,image_size,image_size)
                 depths=depths.reshape(num_in_batch,1,image_size,image_size)
+
+                model_input = torch.cat((images, depths), dim=1)
+
                 labels = labels.reshape(num_in_batch,image_size,image_size).long()
                 labels[labels==255]=4
-                outputs = model(images.to(device))
+                outputs = model(model_input.to(device))
                 loss = combined_loss(labels.to(device),outputs)
                 test_loss += loss.item()
                 test_acc += torchmetrics.functional.accuracy(outputs, labels.to(device)).item()
