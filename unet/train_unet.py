@@ -7,6 +7,7 @@ from ai4mars_dataset import AI4MarsDataset
 from unet import UNet
 import pickle
 from unet_loss import combined_loss
+import argparse
 import torchmetrics
 
 def compute_confusion_matrix(list_cms):
@@ -16,7 +17,7 @@ def compute_confusion_matrix(list_cms):
     return percentage_cm
 
 
-def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256):
+def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256, train_size=256):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == torch.device('cpu'):
         num_workers = 0
@@ -27,7 +28,6 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256)
     train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True, image_size=image_size)
     test_dataset = AI4MarsDataset(folder_path=dataroot, is_train=False, image_size=image_size)
 
-    train_size = int(256/256 * len(train_dataset))
     eval_size = len(train_dataset) - train_size
     train_dataset, eval_dataset = torch.utils.data.random_split(train_dataset, [train_size, eval_size])
     
@@ -117,15 +117,18 @@ def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256)
             epoch+1, record["training_acc"][epoch], record["test_acc"][epoch],
             record["training_loss"][epoch], record["test_loss"][epoch],
             record["training_dice"][epoch], record["test_dice"][epoch],
-            record["training_jaccard"][epoch], record["test_jaccard"][epoch],
-            record["training_cm"][epoch], record["test_cm"][epoch]))
+            record["training_jaccard"][epoch], record["test_jaccard"][epoch]))
 
         if record["test_jaccard"][epoch]>best_model_test_acc:
             best_model_test_acc=record["test_jaccard"][epoch]
             torch.save(model.state_dict(), './model.pth')
-            
+
     return record
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train-size', help='The number of datapoints to train with.',
+                        default=256)
+    args = parser.parse_args()
+    main(train_size=args.train_size)
