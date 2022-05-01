@@ -1,26 +1,33 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 from ai4mars_dataset import AI4MarsDataset
 from unet import UNet
 import pickle
+from unet_loss import combined_loss
+import argparse
+import torchmetrics
+
+def compute_confusion_matrix(list_cms):
+    stacked_cms = torch.stack((list_cms), dim=0)
+    sum_rows_cms = torch.sum(stacked_cms, dim=0)
+    percentage_cm = torch.sum(stacked_cms, dim=0)/torch.sum(sum_rows_cms, dim=1).unsqueeze(1) 
+    return percentage_cm
 
 
-def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size = 256):
+def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256, train_size=256):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == torch.device('cpu'):
         num_workers = 0
     else:
         torch.cuda.empty_cache()
         num_workers = 2
-    # load and transform dataset
 
     train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True, image_size=image_size)
     test_dataset = AI4MarsDataset(folder_path=dataroot, is_train=False, image_size=image_size)
 
-    train_size = int(256/256 * len(train_dataset))
     eval_size = len(train_dataset) - train_size
     train_dataset, eval_dataset = torch.utils.data.random_split(train_dataset, [train_size, eval_size])
     
@@ -32,19 +39,23 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
                                              shuffle=False, num_workers=num_workers)
 
     model = UNet(in_channels=1, n_classes=5)
-    record = [[], [], []]
+    record = {"train_size":train_size,
+              "training_acc":[], "test_acc":[], "training_loss":[], "test_loss":[],
+              "training_dice":[], "test_dice":[], "training_jaccard":[], "test_jaccard":[],
+              "training_cm":[], "test_cm":[]}
 
 
-    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
     model.to(device)
     best_model_test_acc = 0
     
     for epoch in range(num_epochs):  # loop over the dataset multiple timesi
         
-        running_loss = 0.0
-        train_total, test_total = 0, 0
-        train_correct, test_correct = 0, 0
+        train_loss, test_loss = 0.0, 0.0
+        train_acc, test_acc = 0.0, 0.0
+        train_dice, test_dice = 0.0, 0.0 
+        train_jaccard, test_jaccard = 0.0, 0.0 
+        train_cm, test_cm = [], []
         model.train()
         
         for data in trainloader:
@@ -61,19 +72,17 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
             # forward + backward + optimize
             
             outputs = model(images.to(device))
-            
-            loss = criterion(outputs, labels.to(device))
+            loss = combined_loss(labels.to(device),outputs)
             loss.backward()
             optimizer.step()
 
             # print statistics
-            running_loss += loss.item()
-            seg_acc = ((labels.cpu() == torch.argmax(outputs, axis=1).cpu()).sum() / torch.numel(labels.cpu())).item()
-            print('batch_acc:',seg_acc)
-            _, train_predict = torch.max(outputs.data, 1)
-            train_total += labels.size(0)
-            train_correct += (train_predict == labels.to(device)).sum().item()
-            print('loss:',loss.item())
+            train_loss += loss.item()
+            train_acc += torchmetrics.functional.accuracy(outputs, labels.to(device)).item()
+            train_dice += torchmetrics.functional.dice_score(outputs, labels.to(device)).item()
+            train_jaccard += torchmetrics.functional.jaccard_index(outputs, labels.to(device), num_classes=5).item()
+            train_cm.append(torchmetrics.functional.confusion_matrix(outputs, labels.to(device), num_classes=5))
+
         with torch.no_grad():
             model.eval()
             for data in testloader:
@@ -84,28 +93,43 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
                 labels = labels.reshape(num_in_batch,image_size,image_size).long()
                 labels[labels==255]=4
                 outputs = model(images.to(device))
-                _, test_predict = torch.max(outputs.data, 1)
-                test_total += labels.size(0)
-                test_correct += (test_predict == labels.to(device)).sum().item()
-        train_acc = train_correct/train_total
-        test_acc = test_correct/test_total
-        record[0].append(train_acc)
-        record[1].append(test_acc)
-        record[2].append(running_loss/len(trainloader))
-        print('Epoch %d| Train loss: %.4f| Train Acc: %.3f| Test Acc: %.3f'%(
-            epoch+1, running_loss/len(trainloader), train_acc, test_acc))
-        if test_acc>best_model_test_acc:
-            best_model_test_acc=test_acc
-            
-            torch.save(model.state_dict(), './model.pth')
-            with open("./record.pkl", "wb") as fp:   # Unpickling
-                pickle.dump(record, fp)
+                loss = combined_loss(labels.to(device),outputs)
+                test_loss += loss.item()
+                test_acc += torchmetrics.functional.accuracy(outputs, labels.to(device)).item()
+                test_dice += torchmetrics.functional.dice_score(outputs, labels.to(device)).item()
+                test_jaccard += torchmetrics.functional.jaccard_index(outputs, labels.to(device), num_classes=5).item()
+                test_cm.append(torchmetrics.functional.confusion_matrix(outputs, labels.to(device), num_classes=5))
 
-    print('Finished Training')
-  
+        record["training_acc"].append(train_acc/len(trainloader))
+        record["test_acc"].append(test_acc/len(testloader))
+        record["training_loss"].append(train_loss/len(trainloader))
+        record["test_loss"].append(test_loss/len(testloader))
+        record["training_dice"].append(train_dice/len(trainloader))
+        record["test_dice"].append(test_dice/len(testloader))
+        record["training_jaccard"].append(train_jaccard/len(trainloader))
+        record["test_jaccard"].append(test_jaccard/len(testloader))
+        record["training_cm"].append(compute_confusion_matrix(train_cm))
+        record["test_cm"].append(compute_confusion_matrix(train_cm))
+
+        with open("./record.pkl", "wb") as fp:   # Unpickling
+            pickle.dump(record, fp)
+
+        print('Epoch %d| Train Acc: %.4f| Test Acc: %.3f| Train Loss: %.3f| Test Loss: %.3f| Train Dice: %.3f| Test Dice: %.3f| Train Jaccard: %.3f| Test Jaccard: %.3f|'%(
+            epoch+1, record["training_acc"][epoch], record["test_acc"][epoch],
+            record["training_loss"][epoch], record["test_loss"][epoch],
+            record["training_dice"][epoch], record["test_dice"][epoch],
+            record["training_jaccard"][epoch], record["test_jaccard"][epoch]))
+
+        if record["test_jaccard"][epoch]>best_model_test_acc:
+            best_model_test_acc=record["test_jaccard"][epoch]
+            torch.save(model.state_dict(), './model.pth')
 
     return record
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train-size', help='The number of datapoints to train with.',
+                        default=256)
+    args = parser.parse_args()
+    main(train_size=int(args.train_size))
