@@ -6,7 +6,8 @@ import numpy as np
 from ai4mars_dataset import AI4MarsDataset
 from unet import UNet
 import pickle
-from unet_loss import dice_loss
+from unet_loss import combined_loss
+import torchmetrics
 
 
 
