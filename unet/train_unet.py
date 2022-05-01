@@ -16,14 +16,13 @@ def compute_confusion_matrix(list_cms):
     return percentage_cm
 
 
-def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size = 256):
+def main(num_epochs=10, batch_size=16, dataroot="./data/msl/", image_size = 256):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if device == torch.device('cpu'):
         num_workers = 0
     else:
         torch.cuda.empty_cache()
         num_workers = 2
-    # load and transform dataset
 
     train_dataset = AI4MarsDataset(folder_path=dataroot, is_train=True, image_size=image_size)
     test_dataset = AI4MarsDataset(folder_path=dataroot, is_train=False, image_size=image_size)
@@ -45,7 +44,6 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
               "training_cm":[], "test_cm":[]}
 
 
-    # criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
     model.to(device)
     best_model_test_acc = 0
@@ -73,7 +71,6 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
             # forward + backward + optimize
             
             outputs = model(images.to(device))
-            
             loss = combined_loss(labels.to(device),outputs)
             loss.backward()
             optimizer.step()
@@ -112,23 +109,21 @@ def main(num_epochs=5, batch_size=2, dataroot="./data_subset/msl/", image_size =
         record["test_jaccard"].append(test_jaccard/len(testloader))
         record["training_cm"].append(compute_confusion_matrix(train_cm))
         record["test_cm"].append(compute_confusion_matrix(train_cm))
+
         with open("./record.pkl", "wb") as fp:   # Unpickling
             pickle.dump(record, fp)
+
         print('Epoch %d| Train Acc: %.4f| Test Acc: %.3f| Train Loss: %.3f| Test Loss: %.3f| Train Dice: %.3f| Test Dice: %.3f| Train Jaccard: %.3f| Test Jaccard: %.3f|'%(
             epoch+1, record["training_acc"][epoch], record["test_acc"][epoch],
             record["training_loss"][epoch], record["test_loss"][epoch],
             record["training_dice"][epoch], record["test_dice"][epoch],
             record["training_jaccard"][epoch], record["test_jaccard"][epoch],
             record["training_cm"][epoch], record["test_cm"][epoch]))
+
         if record["test_jaccard"][epoch]>best_model_test_acc:
             best_model_test_acc=record["test_jaccard"][epoch]
-            
             torch.save(model.state_dict(), './model.pth')
-        
-
-    print('Finished Training')
-  
-
+            
     return record
 
 
