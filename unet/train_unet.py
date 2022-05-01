@@ -132,4 +132,4 @@ if __name__ == "__main__":
     parser.add_argument('--train-size', help='The number of datapoints to train with.',
                         default=256)
     args = parser.parse_args()
-    main(train_size=args.train_size)
+    main(train_size=int(args.train_size))
