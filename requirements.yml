@@ -5,6 +5,9 @@ dependencies:
   - python=3.7.*
   - numpy
   - pillow
+  - matplotlib
+  - jupyter
+  - notebook
   - pip
   - pip:
     - planetaryimage
@@ -12,3 +15,5 @@ dependencies:
     - torch
     - torchvision
     - torchaudio
+    - open3d
+    - torchmetrics
