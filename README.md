@@ -27,7 +27,7 @@ of this directory and using:
     python scrape_msl_depth_data.py
 ```
 
-Due to the large amount of data that will be scraped (~73 GB), it is useful to run this script in 
+Due to the large amount of data that will be scraped, it is useful to run this script in 
 parallel to download multiple files at once. This can be done by being in the root of this directory and 
 using:
 
