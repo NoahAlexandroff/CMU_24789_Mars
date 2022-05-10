@@ -9,3 +9,6 @@ dependencies:
   - pip:
     - planetaryimage
     - wget
+    - torch
+    - torchvision
+    - torchaudio

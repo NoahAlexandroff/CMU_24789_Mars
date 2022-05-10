@@ -84,7 +84,7 @@ def update_filename_from_edr(edr_filename, prodid, extension):
 
     return updated_filename
 
-def download_file_from_url(url, output_path, filename):
+def download_file_from_url(url, output_path, filename, output_size):
     """
     Downloads the desired file from PDS and saves it in the desired location and
     format
@@ -113,6 +113,7 @@ def download_file_from_url(url, output_path, filename):
             img_arr = img_arr.reshape(img_arr.shape[1:])
             img_arr = img_arr.astype(np.float32)
             pil_img = Image.fromarray(img_arr, mode='F')
+            pil_img=pil_img.resize((output_size,output_size),Image.NEAREST)
             pil_img.save(output_path+filename)
             os.remove(output_path+filename[:-4]+'IMG')
 
@@ -122,7 +123,7 @@ def download_file_from_url(url, output_path, filename):
 
     return 0
 
-def main(data_path, output_path, starting_index, ending_index):
+def main(data_path, output_path, starting_index, ending_index, output_size):
     """
     Main function that downloads the desired file types that map to the existing
     edr files in the AI4Mars dataset. The default values are for range data. 
@@ -133,6 +134,12 @@ def main(data_path, output_path, starting_index, ending_index):
 
     output_path: the path of the directory the newly downloaded data should be stored
 
+    starting_index: the starting index of files to download to allow for distributed download
+
+    ending_index: the ending index of files to download to allow for distributed download
+
+    output_size: the output size of the downloaded images in pixels
+
     Returns:
     --------
     num_files_downloaded: the number of files that were downloaded
@@ -142,7 +149,7 @@ def main(data_path, output_path, starting_index, ending_index):
     for filename in raw_filenames:
         depth_filename = update_filename_from_edr(filename, prodid = "RNG", extension = ".tiff")
         depth_url = msl_create_url(filename) 
-        num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename)
+        num_files_downloaded += download_file_from_url(depth_url, output_path, depth_filename, output_size)
     
     return num_files_downloaded
 
@@ -157,9 +164,11 @@ if __name__=='__main__':
                         default=0)
     parser.add_argument('--ending-index', help='The ending index of files to allow for distributed download.',
                         default=-1)
+    parser.add_argument('--output-size', help='The output size of image files in pixels.',
+                        default=1024)
     args = parser.parse_args()
     if args.output_path == None:
         args.output_path = args.data_path + 'msl/images/rng/'
-    output = main(args.data_path, args.output_path, int(args.starting_index), int(args.ending_index))
+    output = main(args.data_path, args.output_path, int(args.starting_index), int(args.ending_index), int(args.output_size))
     print('\n')
     print(f"Downloaded {output} files.")
